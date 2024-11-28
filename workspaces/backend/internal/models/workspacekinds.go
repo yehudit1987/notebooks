@@ -19,23 +19,72 @@
 package models
 
 import (
-	"strings"
-
 	kubefloworgv1beta1 "github.com/kubeflow/notebooks/workspaces/controller/api/v1beta1"
 )
 
 type WorkspaceKindModel struct {
-	Name        string            `json:"name"`
-	PodTemplate PodTemplateModel  `json:"pod_template"`
-	Spawner     SpawnerModel      `json:"spawner"`
-	Labels      map[string]string `json:"labels,omitempty"`
-	Annotations map[string]string `json:"annotations,omitempty"`
+	Name         string            `json:"name"`
+	Namespace    string            `json:"namespace"`
+	DeferUpdates bool              `json:"defer_updates"`
+	Paused       bool              `json:"paused"`
+	PausedTime   int64             `json:"paused_time"`
+	State        string            `json:"state"`
+	StateMessage string            `json:"state_message"`
+	PodTemplate  PodTemplateModel  `json:"pod_template"`
+	Activity     WorkspaceActivity `json:"activity"`
+}
+
+type WorkspaceActivity struct {
+	LastActivity int64     `json:"last_activity"`
+	LastUpdate   int64     `json:"last_update"`
+	LastProbe    LastProbe `json:"last_probe"`
+}
+
+type LastProbe struct {
+	Start   int64  `json:"start_time_ms"`
+	End     int64  `json:"end_time_ms"`
+	Result  string `json:"result"`
+	Message string `json:"message"`
 }
 
 type PodTemplateModel struct {
-	ImageConfig string        `json:"image_config"`
-	PodConfig   string        `json:"pod_config"`
-	Resources   ResourceModel `json:"resources"`
+	PodMetadata PodMetadata `json:"pod_metadata"`
+	Volumes     Volumes     `json:"volumes"`
+	ImageConfig ImageConfig `json:"image_config"`
+	PodConfig   PodConfig   `json:"pod_config"`
+}
+
+type PodMetadata struct {
+	Labels      map[string]string `json:"labels"`
+	Annotations map[string]string `json:"annotations"`
+}
+
+type Volumes struct {
+	Home Volume   `json:"home"`
+	Data []Volume `json:"data"`
+}
+
+type Volume struct {
+	PVCName   string `json:"pvc_name"`
+	MountPath string `json:"mount_path"`
+	ReadOnly  bool   `json:"read_only"`
+}
+
+type ImageConfig struct {
+	Current       string     `json:"current"`
+	Desired       string     `json:"desired"`
+	RedirectChain []Redirect `json:"redirect_chain"`
+}
+
+type Redirect struct {
+	Source string `json:"source"`
+	Target string `json:"target"`
+}
+
+type PodConfig struct {
+	Current       string     `json:"current"`
+	Desired       string     `json:"desired"`
+	RedirectChain []Redirect `json:"redirect_chain"`
 }
 
 type ResourceModel struct {
@@ -43,28 +92,29 @@ type ResourceModel struct {
 	Memory string `json:"memory"`
 }
 
-type SpawnerModel struct {
-	DisplayName        string `json:"display_name"`
-	Description        string `json:"description"`
-	Deprecated         bool   `json:"deprecated"`
-	DeprecationMessage string `json:"deprecation_message"`
-	Hidden             bool   `json:"hidden"`
-}
-
 func NewWorkspaceKindModelFromWorkspaceKind(item *kubefloworgv1beta1.WorkspaceKind) WorkspaceKindModel {
-	deprecated := false
-	if item.Spec.Spawner.Deprecated != nil {
-		deprecated = *item.Spec.Spawner.Deprecated
+
+	var image_redirect_chain []Redirect
+	for _, item := range item.Spec.PodTemplate.Options.ImageConfig.Values {
+		if item.Redirect != nil {
+			image_redirect_chain = append(image_redirect_chain, Redirect{Source: item.Id, Target: item.Redirect.To})
+		}
 	}
 
-	hidden := false
-	if item.Spec.Spawner.Hidden != nil {
-		hidden = *item.Spec.Spawner.Hidden
+	var pod_redirect_chain []Redirect
+	for _, item := range item.Spec.PodTemplate.Options.PodConfig.Values {
+		if item.Redirect != nil {
+			pod_redirect_chain = append(pod_redirect_chain, Redirect{Source: item.Id, Target: item.Redirect.To})
+		}
 	}
 
-	deprecationMessage := ""
-	if item.Spec.Spawner.DeprecationMessage != nil {
-		deprecationMessage = *item.Spec.Spawner.DeprecationMessage
+	labels := make(map[string]string)
+	if item.Spec.PodTemplate.PodMetadata.Labels != nil {
+		labels = item.Spec.PodTemplate.PodMetadata.Labels
+	}
+	annotations := make(map[string]string)
+	if item.Spec.PodTemplate.PodMetadata.Annotations != nil {
+		annotations = item.Spec.PodTemplate.PodMetadata.Annotations
 	}
 
 	cpuValues := make([]string, len(item.Spec.PodTemplate.Options.PodConfig.Values))
@@ -75,22 +125,24 @@ func NewWorkspaceKindModelFromWorkspaceKind(item *kubefloworgv1beta1.WorkspaceKi
 	}
 
 	workspaceKindModel := WorkspaceKindModel{
-		Name:        item.Name,
-		Labels:      item.Labels,
-		Annotations: item.Annotations,
-		Spawner: SpawnerModel{
-			DisplayName:        item.Spec.Spawner.DisplayName,
-			Description:        item.Spec.Spawner.Description,
-			Deprecated:         deprecated,
-			DeprecationMessage: deprecationMessage,
-			Hidden:             hidden,
-		},
+		Name: item.Name,
 		PodTemplate: PodTemplateModel{
-			ImageConfig: item.Spec.PodTemplate.Options.ImageConfig.Spawner.Default,
-			PodConfig:   strings.Join(cpuValues, ",") + "|" + strings.Join(memoryValues, ","),
-			Resources: ResourceModel{
-				Cpu:    strings.Join(cpuValues, ", "),
-				Memory: strings.Join(memoryValues, ", "),
+			PodMetadata: PodMetadata{
+				Labels:      labels,
+				Annotations: annotations,
+			},
+			Volumes: Volumes{
+				//need to implement - couldnt find suitable assigns in the resource example.
+			},
+			ImageConfig: ImageConfig{
+				Current:       item.Spec.PodTemplate.Options.ImageConfig.Spawner.Default,
+				Desired:       item.Spec.PodTemplate.Options.ImageConfig.Spawner.Default,
+				RedirectChain: image_redirect_chain,
+			},
+			PodConfig: PodConfig{
+				Current:       item.Spec.PodTemplate.Options.PodConfig.Spawner.Default,
+				Desired:       item.Spec.PodTemplate.Options.PodConfig.Spawner.Default,
+				RedirectChain: pod_redirect_chain,
 			},
 		},
 	}
