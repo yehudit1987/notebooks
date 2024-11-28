@@ -24,56 +24,22 @@ import (
 
 type WorkspaceKindModel struct {
 	Name string `json:"name"`
-	// Namespace    string            `json:"namespace"`
-	// DeferUpdates bool              `json:"defer_updates"`
-	// Paused       bool              `json:"paused"`
-	// PausedTime   int64             `json:"paused_time"`
-	// State        string            `json:"state"`
-	// StateMessage string            `json:"state_message"`
-	PodTemplate PodTemplateModel `json:"pod_template"`
+	Spawner     SpawnerModel      `json:"spawner"`
+	PodTemplate PodTemplateModel  `json:"pod_template"`
 }
+
+type SpawnerModel struct {
+	DisplayName        string `json:"display_name"`
+	Description        string `json:"description"`
+	Deprecated         bool   `json:"deprecated"`
+	DeprecationMessage string `json:"deprecation_message"`
+	Hidden             bool   `json:"hidden"`
+}
+
 type PodTemplateModel struct {
 	PodMetadata PodMetadata `json:"pod_metadata"`
 	ImageConfig ImageConfig `json:"image_config"`
 	PodConfig   PodConfig   `json:"pod_config"`
-}
-
-// type PodMetadata struct {
-// 	Labels      map[string]string `json:"labels"`
-// 	Annotations map[string]string `json:"annotations"`
-// }
-
-// type Volumes struct {
-// 	Home Volume   `json:"home"`
-// 	Data []Volume `json:"data"`
-// }
-
-// type Volume struct {
-// 	PVCName   string `json:"pvc_name"`
-// 	MountPath string `json:"mount_path"`
-// 	ReadOnly  bool   `json:"read_only"`
-// }
-
-// type ImageConfig struct {
-// 	Current       string     `json:"current"`
-// 	Desired       string     `json:"desired"`
-// 	RedirectChain []Redirect `json:"redirect_chain"`
-// }
-
-// type Redirect struct {
-// 	Source string `json:"source"`
-// 	Target string `json:"target"`
-// }
-
-// type PodConfig struct {
-// 	Current       string     `json:"current"`
-// 	Desired       string     `json:"desired"`
-// 	RedirectChain []Redirect `json:"redirect_chain"`
-// }
-
-type ResourceModel struct {
-	Cpu    string `json:"cpu"`
-	Memory string `json:"memory"`
 }
 
 func NewWorkspaceKindModelFromWorkspaceKind(item *kubefloworgv1beta1.WorkspaceKind) WorkspaceKindModel {
@@ -106,15 +72,30 @@ func NewWorkspaceKindModelFromWorkspaceKind(item *kubefloworgv1beta1.WorkspaceKi
 		pod_config_values = append(pod_config_values, item.Id)
 	}
 
-	// cpuValues := make([]string, len(item.Spec.PodTemplate.Options.PodConfig.Values))
-	// memoryValues := make([]string, len(item.Spec.PodTemplate.Options.PodConfig.Values))
-	// for i, value := range item.Spec.PodTemplate.Options.PodConfig.Values {
-	// 	cpuValues[i] = value.Spec.Resources.Requests.Cpu().String()
-	// 	memoryValues[i] = value.Spec.Resources.Requests.Memory().String()
-	// }
+	deprecated := false
+	if item.Spec.Spawner.Deprecated != nil {
+		deprecated = *item.Spec.Spawner.Deprecated
+	}
+
+	hidden := false
+	if item.Spec.Spawner.Hidden != nil {
+		hidden = *item.Spec.Spawner.Hidden
+	}
+
+	deprecationMessage := ""
+	if item.Spec.Spawner.DeprecationMessage != nil {
+		deprecationMessage = *item.Spec.Spawner.DeprecationMessage
+	}
 
 	workspaceKindModel := WorkspaceKindModel{
 		Name: item.Name,
+		Spawner: SpawnerModel{
+			DisplayName:        item.Spec.Spawner.DisplayName,
+			Description:        item.Spec.Spawner.Description,
+			Deprecated:         deprecated,
+			DeprecationMessage: deprecationMessage,
+			Hidden:             hidden,
+		},
 		PodTemplate: PodTemplateModel{
 			PodMetadata: PodMetadata{
 				Labels:      labels,
