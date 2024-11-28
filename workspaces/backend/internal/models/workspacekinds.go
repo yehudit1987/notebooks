@@ -23,69 +23,53 @@ import (
 )
 
 type WorkspaceKindModel struct {
-	Name         string            `json:"name"`
-	Namespace    string            `json:"namespace"`
-	DeferUpdates bool              `json:"defer_updates"`
-	Paused       bool              `json:"paused"`
-	PausedTime   int64             `json:"paused_time"`
-	State        string            `json:"state"`
-	StateMessage string            `json:"state_message"`
-	PodTemplate  PodTemplateModel  `json:"pod_template"`
-	Activity     WorkspaceActivity `json:"activity"`
+	Name string `json:"name"`
+	// Namespace    string            `json:"namespace"`
+	// DeferUpdates bool              `json:"defer_updates"`
+	// Paused       bool              `json:"paused"`
+	// PausedTime   int64             `json:"paused_time"`
+	// State        string            `json:"state"`
+	// StateMessage string            `json:"state_message"`
+	PodTemplate PodTemplateModel `json:"pod_template"`
 }
-
-type WorkspaceActivity struct {
-	LastActivity int64     `json:"last_activity"`
-	LastUpdate   int64     `json:"last_update"`
-	LastProbe    LastProbe `json:"last_probe"`
-}
-
-type LastProbe struct {
-	Start   int64  `json:"start_time_ms"`
-	End     int64  `json:"end_time_ms"`
-	Result  string `json:"result"`
-	Message string `json:"message"`
-}
-
 type PodTemplateModel struct {
 	PodMetadata PodMetadata `json:"pod_metadata"`
-	Volumes     Volumes     `json:"volumes"`
 	ImageConfig ImageConfig `json:"image_config"`
 	PodConfig   PodConfig   `json:"pod_config"`
 }
 
-type PodMetadata struct {
-	Labels      map[string]string `json:"labels"`
-	Annotations map[string]string `json:"annotations"`
-}
+// type PodMetadata struct {
+// 	Labels      map[string]string `json:"labels"`
+// 	Annotations map[string]string `json:"annotations"`
+// }
 
-type Volumes struct {
-	Home Volume   `json:"home"`
-	Data []Volume `json:"data"`
-}
+// type Volumes struct {
+// 	Home Volume   `json:"home"`
+// 	Data []Volume `json:"data"`
+// }
 
-type Volume struct {
-	PVCName   string `json:"pvc_name"`
-	MountPath string `json:"mount_path"`
-	ReadOnly  bool   `json:"read_only"`
-}
+// type Volume struct {
+// 	PVCName   string `json:"pvc_name"`
+// 	MountPath string `json:"mount_path"`
+// 	ReadOnly  bool   `json:"read_only"`
+// }
 
-type ImageConfig struct {
-	Current       string     `json:"current"`
-	Desired       string     `json:"desired"`
-	RedirectChain []Redirect `json:"redirect_chain"`
-}
+// type ImageConfig struct {
+// 	Current       string     `json:"current"`
+// 	Desired       string     `json:"desired"`
+// 	RedirectChain []Redirect `json:"redirect_chain"`
+// }
 
-type Redirect struct {
-	Source string `json:"source"`
-	Target string `json:"target"`
-}
+// type Redirect struct {
+// 	Source string `json:"source"`
+// 	Target string `json:"target"`
+// }
 
-type PodConfig struct {
-	Current       string     `json:"current"`
-	Desired       string     `json:"desired"`
-	RedirectChain []Redirect `json:"redirect_chain"`
-}
+// type PodConfig struct {
+// 	Current       string     `json:"current"`
+// 	Desired       string     `json:"desired"`
+// 	RedirectChain []Redirect `json:"redirect_chain"`
+// }
 
 type ResourceModel struct {
 	Cpu    string `json:"cpu"`
@@ -117,12 +101,17 @@ func NewWorkspaceKindModelFromWorkspaceKind(item *kubefloworgv1beta1.WorkspaceKi
 		annotations = item.Spec.PodTemplate.PodMetadata.Annotations
 	}
 
-	cpuValues := make([]string, len(item.Spec.PodTemplate.Options.PodConfig.Values))
-	memoryValues := make([]string, len(item.Spec.PodTemplate.Options.PodConfig.Values))
-	for i, value := range item.Spec.PodTemplate.Options.PodConfig.Values {
-		cpuValues[i] = value.Spec.Resources.Requests.Cpu().String()
-		memoryValues[i] = value.Spec.Resources.Requests.Memory().String()
+	var pod_config_values []string
+	for _, item := range item.Spec.PodTemplate.Options.PodConfig.Values {
+		pod_config_values = append(pod_config_values, item.Id)
 	}
+
+	// cpuValues := make([]string, len(item.Spec.PodTemplate.Options.PodConfig.Values))
+	// memoryValues := make([]string, len(item.Spec.PodTemplate.Options.PodConfig.Values))
+	// for i, value := range item.Spec.PodTemplate.Options.PodConfig.Values {
+	// 	cpuValues[i] = value.Spec.Resources.Requests.Cpu().String()
+	// 	memoryValues[i] = value.Spec.Resources.Requests.Memory().String()
+	// }
 
 	workspaceKindModel := WorkspaceKindModel{
 		Name: item.Name,
@@ -131,18 +120,13 @@ func NewWorkspaceKindModelFromWorkspaceKind(item *kubefloworgv1beta1.WorkspaceKi
 				Labels:      labels,
 				Annotations: annotations,
 			},
-			Volumes: Volumes{
-				//need to implement - couldnt find suitable assigns in the resource example.
-			},
 			ImageConfig: ImageConfig{
 				Current:       item.Spec.PodTemplate.Options.ImageConfig.Spawner.Default,
 				Desired:       item.Spec.PodTemplate.Options.ImageConfig.Spawner.Default,
 				RedirectChain: image_redirect_chain,
 			},
 			PodConfig: PodConfig{
-				Current:       item.Spec.PodTemplate.Options.PodConfig.Spawner.Default,
-				Desired:       item.Spec.PodTemplate.Options.PodConfig.Spawner.Default,
-				RedirectChain: pod_redirect_chain,
+				Values: pod_config_values,
 			},
 		},
 	}
