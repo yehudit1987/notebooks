@@ -36,89 +36,31 @@ import {
 } from '@patternfly/react-table';
 import { FilterIcon } from '@patternfly/react-icons';
 import { Workspace, WorkspaceState } from '~/shared/types';
+import { fetchAllWorkspaces, fetchWorkspacesByNamespace } from '~/app/actions/WorkspacesActions';
 
 export const Workspaces: React.FunctionComponent = () => {
-  /* Mocked workspaces, to be removed after fetching info from backend */
-  const workspaces: Workspace[] = [
-    {
-      name: 'My Jupyter Notebook',
-      namespace: 'namespace1',
-      paused: true,
-      deferUpdates: true,
-      kind: 'jupyter-lab',
-      podTemplate: {
-        volumes: {
-          home: '/home',
-          data: [
-            {
-              pvcName: 'data',
-              mountPath: '/data',
-              readOnly: false,
-            },
-          ],
-        },
-      },
-      options: {
-        imageConfig: 'jupyterlab_scipy_180',
-        podConfig: 'Small CPU',
-      },
-      status: {
-        activity: {
-          lastActivity: 0,
-          lastUpdate: 0,
-        },
-        pauseTime: 0,
-        pendingRestart: false,
-        podTemplateOptions: {
-          imageConfig: {
-            desired: '',
-            redirectChain: [],
-          },
-        },
-        state: WorkspaceState.Paused,
-        stateMessage: 'It is paused.',
-      },
-    },
-    {
-      name: 'My Other Jupyter Notebook',
-      namespace: 'namespace1',
-      paused: false,
-      deferUpdates: false,
-      kind: 'jupyter-lab',
-      podTemplate: {
-        volumes: {
-          home: '/home',
-          data: [
-            {
-              pvcName: 'data',
-              mountPath: '/data',
-              readOnly: false,
-            },
-          ],
-        },
-      },
-      options: {
-        imageConfig: 'jupyterlab_scipy_180',
-        podConfig: 'Large CPU',
-      },
-      status: {
-        activity: {
-          lastActivity: 0,
-          lastUpdate: 0,
-        },
-        pauseTime: 0,
-        pendingRestart: false,
-        podTemplateOptions: {
-          imageConfig: {
-            desired: '',
-            redirectChain: [],
-          },
-        },
-        state: WorkspaceState.Running,
-        stateMessage: 'It is running.',
-      },
-    },
-  ];
+  const [workspaces, setWorkspaces] = React.useState<Workspace[]>([]);
+  const [error, setError] = React.useState<string | null>(null);
+
+  const namespace = ''; // TODO: change that to use - useContext once pr will be merged.
+
+  React.useEffect(() => {
+    const loadWorkspaces = async () => {
+      try {
+        let workspaces;
+        if (namespace) {
+          workspaces = await fetchWorkspacesByNamespace('kubeflow');
+        } else {
+          workspaces = await fetchAllWorkspaces();
+        }
+        setWorkspaces(workspaces);
+      } catch (err: any) {
+        setError(err.message || 'Failed to load workspaces');
+      }
+    };
+
+    loadWorkspaces();
+  }, []);
 
   // Table columns
   const columnNames = {
