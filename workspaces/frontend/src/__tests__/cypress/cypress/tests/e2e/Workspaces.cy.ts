@@ -8,9 +8,7 @@ const validateWorkspaceRow = (workspace: any, index: number) => {
     .find('[data-test="workspace-name"]')
     .should('have.text', workspace.name);
 
-  // Map workspace state to the expected color and label
-  const stateColors = ['green', 'orange', 'yellow', 'blue', 'red', 'purple'];
-  const expectedColor = stateColors[workspace.status.state];
+  // Map workspace state to the expected label
   const expectedLabel = WorkspaceState[workspace.status.state];
 
   // Validate the state label and pod configuration
