@@ -1,231 +1,102 @@
 import { WorkspaceState } from '~/shared/types';
 
-export const mockWorkspaces = {
-  data: [
-    {
-      name: 'workspace-1',
-      namespace: 'namespace-1',
-      paused: false,
-      deferUpdates: false,
-      kind: 'jupyter-lab',
-      podTemplate: {
-        volumes: {
-          home: '/home',
-          data: [
+const generateMockWorkspace = (
+  name: string,
+  namespace: string,
+  state: WorkspaceState,
+  paused: boolean,
+  imageConfig: string,
+  podConfig: string,
+  pvcName: string,
+) => {
+  const currentTime = Date.now();
+  const lastActivity = currentTime - Math.floor(Math.random() * 1000000); // Random last activity time
+  const lastUpdate = currentTime - Math.floor(Math.random() * 100000); // Random last update time
+
+  return {
+    name: name,
+    namespace: namespace,
+    paused: paused,
+    deferUpdates: paused ? true : false,
+    kind: 'jupyter-lab', // or jupyter-notebook, could be randomized too
+    podTemplate: {
+      volumes: {
+        home: '/home',
+        data: [
+          {
+            pvcName: pvcName,
+            mountPath: '/data',
+            readOnly: paused, // Randomize based on paused state
+          },
+        ],
+      },
+    },
+    options: {
+      imageConfig: imageConfig,
+      podConfig: podConfig,
+    },
+    status: {
+      activity: {
+        lastActivity: lastActivity,
+        lastUpdate: lastUpdate,
+      },
+      pauseTime: paused ? currentTime - Math.floor(Math.random() * 1000000) : 0,
+      pendingRestart: paused ? true : false,
+      podTemplateOptions: {
+        imageConfig: {
+          desired: imageConfig,
+          redirectChain: [
             {
-              pvcName: 'data-pvc-1',
-              mountPath: '/data',
-              readOnly: false,
+              source: 'base-image',
+              target: `optimized-${Math.floor(Math.random() * 100)}`,
             },
           ],
         },
       },
-      options: {
-        imageConfig: 'jupyterlab_scipy_180',
-        podConfig: 'Small CPU',
-      },
-      status: {
-        activity: {
-          lastActivity: 1678900000,
-          lastUpdate: 1678903600,
-        },
-        pauseTime: 0,
-        pendingRestart: false,
-        podTemplateOptions: {
-          imageConfig: {
-            desired: 'jupyterlab_scipy_180',
-            redirectChain: [
-              {
-                source: 'base-image',
-                target: 'optimized-image-1',
-              },
-            ],
-          },
-        },
-        state: WorkspaceState.Running,
-        stateMessage: 'Workspace is running smoothly.',
-      },
+      state: state,
+      stateMessage:
+        state === WorkspaceState.Running
+          ? 'Workspace is running smoothly.'
+          : state === WorkspaceState.Paused
+            ? 'Workspace is paused.'
+            : 'Workspace is operational.',
     },
-    {
-      name: 'workspace-2',
-      namespace: 'namespace-2',
-      paused: true,
-      deferUpdates: true,
-      kind: 'jupyter-lab',
-      podTemplate: {
-        volumes: {
-          home: '/home',
-          data: [
-            {
-              pvcName: 'data-pvc-2',
-              mountPath: '/data',
-              readOnly: true,
-            },
-          ],
-        },
-      },
-      options: {
-        imageConfig: 'jupyterlab_tensorflow_230',
-        podConfig: 'Large CPU',
-      },
-      status: {
-        activity: {
-          lastActivity: 1678901000,
-          lastUpdate: 1678903700,
-        },
-        pauseTime: 1678910000,
-        pendingRestart: true,
-        podTemplateOptions: {
-          imageConfig: {
-            desired: 'jupyterlab_tensorflow_230',
-            redirectChain: [
-              {
-                source: 'base-image',
-                target: 'optimized-image-2',
-              },
-            ],
-          },
-        },
-        state: WorkspaceState.Paused,
-        stateMessage: 'Workspace is paused.',
-      },
-    },
-    {
-      name: 'workspace-3',
-      namespace: 'namespace-3',
-      paused: false,
-      deferUpdates: true,
-      kind: 'jupyter-notebook',
-      podTemplate: {
-        volumes: {
-          home: '/home',
-          data: [
-            {
-              pvcName: 'data-pvc-3',
-              mountPath: '/data',
-              readOnly: false,
-            },
-          ],
-        },
-      },
-      options: {
-        imageConfig: 'jupyterlab_pytorch_120',
-        podConfig: 'Medium CPU',
-      },
-      status: {
-        activity: {
-          lastActivity: 1678902000,
-          lastUpdate: 1678903800,
-        },
-        pauseTime: 0,
-        pendingRestart: false,
-        podTemplateOptions: {
-          imageConfig: {
-            desired: 'jupyterlab_pytorch_120',
-            redirectChain: [
-              {
-                source: 'base-image',
-                target: 'optimized-image-3',
-              },
-            ],
-          },
-        },
-        state: WorkspaceState.Error,
-        stateMessage: 'Workspace is operational.',
-      },
-    },
-  ],
+  };
 };
 
-export const mockWorkspacesByNS = {
-  data: [
-    {
-      name: 'workspace-1',
-      namespace: 'kubeflow',
-      paused: false,
-      deferUpdates: false,
-      kind: 'jupyter-lab',
-      podTemplate: {
-        volumes: {
-          home: '/home',
-          data: [
-            {
-              pvcName: 'data-pvc-1',
-              mountPath: '/data',
-              readOnly: false,
-            },
-          ],
-        },
-      },
-      options: {
-        imageConfig: 'jupyterlab_scipy_180',
-        podConfig: 'Small CPU',
-      },
-      status: {
-        activity: {
-          lastActivity: 1678900000,
-          lastUpdate: 1678903600,
-        },
-        pauseTime: 0,
-        pendingRestart: false,
-        podTemplateOptions: {
-          imageConfig: {
-            desired: 'jupyterlab_scipy_180',
-            redirectChain: [
-              {
-                source: 'base-image',
-                target: 'optimized-image-1',
-              },
-            ],
-          },
-        },
-        state: WorkspaceState.Running,
-        stateMessage: 'Workspace is running smoothly.',
-      },
-    },
-    {
-      name: 'workspace-2',
-      namespace: 'kubeflow',
-      paused: true,
-      deferUpdates: true,
-      kind: 'jupyter-lab',
-      podTemplate: {
-        volumes: {
-          home: '/home',
-          data: [
-            {
-              pvcName: 'data-pvc-2',
-              mountPath: '/data',
-              readOnly: true,
-            },
-          ],
-        },
-      },
-      options: {
-        imageConfig: 'jupyterlab_tensorflow_230',
-        podConfig: 'Large CPU',
-      },
-      status: {
-        activity: {
-          lastActivity: 1678901000,
-          lastUpdate: 1678903700,
-        },
-        pauseTime: 1678910000,
-        pendingRestart: true,
-        podTemplateOptions: {
-          imageConfig: {
-            desired: 'jupyterlab_tensorflow_230',
-            redirectChain: [
-              {
-                source: 'base-image',
-                target: 'optimized-image-2',
-              },
-            ],
-          },
-        },
-        state: WorkspaceState.Paused,
-        stateMessage: 'Workspace is paused.',
-      },
-    },
-  ],
+const generateMockWorkspaces = (numWorkspaces: number) => {
+  const mockWorkspaces = [];
+  const podConfigs = ['Small CPU', 'Medium CPU', 'Large CPU'];
+  const imageConfigs = [
+    'jupyterlab_scipy_180',
+    'jupyterlab_tensorflow_230',
+    'jupyterlab_pytorch_120',
+  ];
+  const namespaces = ['kubeflow', 'system', 'user-example'];
+
+  for (let i = 1; i <= numWorkspaces; i++) {
+    const state =
+      i % 3 === 0
+        ? WorkspaceState.Error
+        : i % 2 === 0
+          ? WorkspaceState.Paused
+          : WorkspaceState.Running;
+    const paused = state === WorkspaceState.Paused;
+    const name = `workspace-${i}`;
+    const namespace = namespaces[i % namespaces.length];
+    const pvcName = `data-pvc-${i}`;
+    const imageConfig = imageConfigs[i % imageConfigs.length];
+    const podConfig = podConfigs[i % podConfigs.length];
+
+    mockWorkspaces.push(
+      generateMockWorkspace(name, namespace, state, paused, imageConfig, podConfig, pvcName),
+    );
+  }
+
+  return { data: mockWorkspaces };
 };
+
+// Example usage
+export const mockWorkspaces = generateMockWorkspaces(5); // Generate 5 workspaces
+export const mockWorkspacesByNS = generateMockWorkspaces(10);
+console.log(mockWorkspaces);
