@@ -68,3 +68,8 @@ export interface Workspace {
   };
   status: WorkspaceStatus;
 }
+
+export type WorkspaceBody<T> = {
+  data: T;
+  metadata?: Record<string, unknown>;
+};
