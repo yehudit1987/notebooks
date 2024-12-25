@@ -36,27 +36,22 @@ import {
 } from '@patternfly/react-table';
 import { FilterIcon } from '@patternfly/react-icons';
 import { Workspace, WorkspaceState } from '~/shared/types';
-import { fetchAllWorkspaces, fetchWorkspacesByNamespace } from '~/app/actions/WorkspacesActions';
+import { fetchWorkspaces } from '~/app/actions/WorkspacesActions';
 
 export const Workspaces: React.FunctionComponent = () => {
   const [workspaces, setWorkspaces] = React.useState<Workspace[]>([]);
   const [error, setError] = React.useState<string | null>(null);
 
-  const namespace = 'kubeflow'; // TODO: change that to use - useContext once pr will be merged.
+  const namespace = ''; // TODO: change that to use - useContext once pr will be merged.
 
   React.useEffect(() => {
     const loadWorkspaces = async () => {
-      console.log('Inside load workspaces');
       try {
-        let workspaces;
-        if (namespace) {
-          workspaces = await fetchWorkspacesByNamespace(namespace);
-        } else {
-          workspaces = await fetchAllWorkspaces();
-        }
+        let workspaces = await fetchWorkspaces(namespace);
         setWorkspaces(workspaces);
       } catch (err: any) {
         setError(err.message || 'Failed to load workspaces');
+        console.log(err.message); // TODO: Verify how to handle errors display.
       }
     };
 

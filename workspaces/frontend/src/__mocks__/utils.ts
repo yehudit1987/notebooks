@@ -1,5 +1,5 @@
-import { WorkspaceBody } from '~/shared/types';
+import { ResponseBody } from '~/app/types';
 
-export const mockBFFResponse = <T>(data: T): WorkspaceBody<T> => ({
+export const mockBFFResponse = <T>(data: T): ResponseBody<T> => ({
   data,
 });
