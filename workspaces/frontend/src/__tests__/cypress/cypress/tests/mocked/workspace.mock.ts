@@ -93,7 +93,6 @@ const generateMockWorkspaces = (numWorkspaces: number) => {
     );
   }
 
-  // return { data: mockWorkspaces };
   return mockWorkspaces;
 };
 

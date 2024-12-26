@@ -1,23 +1,4 @@
 import 'cypress-axe';
-import type { GenericStaticResponse, RouteHandlerController } from 'cypress/types/net-stubbing';
-import { Workspace } from '~/shared/types';
-
-export const BFF_API_VERSION = 'v1';
-
-type SuccessErrorResponse = {
-  success: boolean;
-  error?: string;
-};
-
-type ApiResponse<V = SuccessErrorResponse> =
-  | V
-  | GenericStaticResponse<string, V>
-  | RouteHandlerController;
-
-type Replacement<R extends string = string> = Record<R, string | undefined>;
-type Query<Q extends string = string> = Record<Q, string>;
-
-type Options = { path?: Replacement; query?: Query; times?: number } | null;
 
 /* eslint-disable @typescript-eslint/no-namespace */
 declare global {
@@ -25,11 +6,6 @@ declare global {
     interface Chainable {
       testA11y: (context?: Parameters<cy['checkA11y']>[0]) => void;
       getDataTest(dataTestSelector: string): Chainable<JQuery<HTMLElement>>;
-      interceptApi: (
-        type: 'GET /api/:apiVersion/workspaces',
-        options: { path: { apiVersion: string } },
-        response: ApiResponse<Workspace[]>,
-      ) => Cypress.Chainable<null>;
     }
   }
 }
