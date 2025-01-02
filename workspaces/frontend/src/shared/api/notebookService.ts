@@ -12,3 +12,13 @@ export const getNamespaces =
       }
       throw new Error('Invalid response format');
     });
+
+export const getWorkspaces =
+  (hostPath: string, namespace: string) =>
+  (opts: APIOptions): Promise<Workspace[]> =>
+    handleRestFailures(restGET(hostPath, `workspaces/${namespace}`, {}, opts)).then((response) => {
+      if (isNotebookResponse<Workspace[]>(response)) {
+        return response.data;
+      }
+      throw new Error('Invalid response format');
+    });
