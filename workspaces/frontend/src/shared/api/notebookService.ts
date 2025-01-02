@@ -15,9 +15,9 @@ export const getNamespaces =
     });
 
 export const getWorkspaces =
-  (hostPath: string, nameSpace: string) =>
+  (hostPath: string, namespace: string) =>
   (opts: APIOptions): Promise<Workspace[]> =>
-    handleRestFailures(restGET(hostPath, `/workspaces/${nameSpace}`, {}, opts)).then((response) => {
+    handleRestFailures(restGET(hostPath, `workspaces/${namespace}`, {}, opts)).then((response) => {
       if (isNotebookResponse<Workspace[]>(response)) {
         return response.data;
       }

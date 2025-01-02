@@ -36,27 +36,15 @@ import {
 } from '@patternfly/react-table';
 import { FilterIcon } from '@patternfly/react-icons';
 import { Workspace, WorkspaceState } from '~/shared/types';
-import { fetchWorkspaces } from '~/app/actions/WorkspacesActions';
+import useWorkspaces from '~/app/hooks/useWorkspaces';
 
 export const Workspaces: React.FunctionComponent = () => {
-  const [workspaces, setWorkspaces] = React.useState<Workspace[]>([]);
-  const [error, setError] = React.useState<string | null>(null);
-
   const namespace = ''; // TODO: change that to use - useContext once pr will be merged.
+  const [workspaces, loading, error] = useWorkspaces(namespace);
 
-  React.useEffect(() => {
-    const loadWorkspaces = async () => {
-      try {
-        let workspaces = await fetchWorkspaces(namespace);
-        setWorkspaces(workspaces);
-      } catch (err: any) {
-        setError(err.message || 'Failed to load workspaces');
-        console.log(err.message); // TODO: Verify how to handle errors display.
-      }
-    };
-
-    loadWorkspaces();
-  }, []);
+  if (error) {
+    console.log(error.message); // TODO: Verify how to handle errors display.
+  }
 
   // Table columns
   const columnNames = {
