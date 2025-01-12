@@ -357,7 +357,7 @@ export const Workspaces: React.FunctionComponent = () => {
       <Title headingLevel="h1">Kubeflow Workspaces</Title>
       <p>View your existing workspaces or create new workspaces.</p>
       {toolbar}
-      <Table data-test="workspaces-table" aria-label="Sortable table" ouiaId="SortableTable">
+      <Table data-testid="workspaces-table" aria-label="Sortable table" ouiaId="SortableTable">
         <Thead>
           <Tr>
             <Th sort={getSortParams(0)}>{columnNames.name}</Th>
@@ -379,17 +379,17 @@ export const Workspaces: React.FunctionComponent = () => {
         </Thead>
         <Tbody>
           {sortedWorkspaces.map((workspace, rowIndex) => (
-            <Tr key={rowIndex} data-test={`workspace-row-${rowIndex}`}>
-              <Td dataLabel={columnNames.name} data-test="workspace-name">
+            <Tr key={rowIndex} data-testid={`workspace-row-${rowIndex}`}>
+              <Td dataLabel={columnNames.name} data-testid="workspace-name">
                 {workspace.name}
               </Td>
               <Td dataLabel={columnNames.kind}>{workspace.kind}</Td>
               <Td dataLabel={columnNames.image}>{workspace.options.imageConfig}</Td>
-              <Td dataLabel={columnNames.podConfig} data-test="pod-config">
+              <Td dataLabel={columnNames.podConfig} data-testid="pod-config">
                 {workspace.options.podConfig}
               </Td>
               <Td dataLabel={columnNames.state}>
-                <Label color={stateColors[workspace.status.state]} data-test="state-label">
+                <Label color={stateColors[workspace.status.state]} data-testid="state-label">
                   {WorkspaceState[workspace.status.state]}
                 </Label>
               </Td>
