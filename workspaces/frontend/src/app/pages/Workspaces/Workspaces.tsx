@@ -35,95 +35,17 @@ import {
   IActions,
 } from '@patternfly/react-table';
 import { FilterIcon } from '@patternfly/react-icons';
+import useWorkspaces from '~/app/hooks/useWorkspaces';
+import { useNamespaceContext } from '~/app/context/NamespaceContextProvider';
 import { Workspace, WorkspaceState } from 'shared/types';
 import { formatRam } from 'shared/utilities/WorkspaceResources';
 
 export const Workspaces: React.FunctionComponent = () => {
-  /* Mocked workspaces, to be removed after fetching info from backend */
-  const workspaces: Workspace[] = [
-    {
-      name: 'My Jupyter Notebook',
-      namespace: 'namespace1',
-      paused: true,
-      deferUpdates: true,
-      kind: 'jupyter-lab',
-      cpu: 3,
-      ram: 500,
-      podTemplate: {
-        volumes: {
-          home: '/home',
-          data: [
-            {
-              pvcName: 'data',
-              mountPath: '/data',
-              readOnly: false,
-            },
-          ],
-        },
-      },
-      options: {
-        imageConfig: 'jupyterlab_scipy_180',
-        podConfig: 'Small CPU',
-      },
-      status: {
-        activity: {
-          lastActivity: 0,
-          lastUpdate: 0,
-        },
-        pauseTime: 0,
-        pendingRestart: false,
-        podTemplateOptions: {
-          imageConfig: {
-            desired: '',
-            redirectChain: [],
-          },
-        },
-        state: WorkspaceState.Paused,
-        stateMessage: 'It is paused.',
-      },
-    },
-    {
-      name: 'My Other Jupyter Notebook',
-      namespace: 'namespace1',
-      paused: false,
-      deferUpdates: false,
-      kind: 'jupyter-lab',
-      cpu: 1,
-      ram: 12540,
-      podTemplate: {
-        volumes: {
-          home: '/home',
-          data: [
-            {
-              pvcName: 'data',
-              mountPath: '/data',
-              readOnly: false,
-            },
-          ],
-        },
-      },
-      options: {
-        imageConfig: 'jupyterlab_scipy_180',
-        podConfig: 'Large CPU',
-      },
-      status: {
-        activity: {
-          lastActivity: 0,
-          lastUpdate: 0,
-        },
-        pauseTime: 0,
-        pendingRestart: false,
-        podTemplateOptions: {
-          imageConfig: {
-            desired: '',
-            redirectChain: [],
-          },
-        },
-        state: WorkspaceState.Running,
-        stateMessage: 'It is running.',
-      },
-    },
-  ];
+  const { selectedNamespace } = useNamespaceContext();
+  const [workspaces, error] = useWorkspaces(selectedNamespace);
+  if (error) {
+    console.log(error.message); // TODO: Verify how to handle errors display.
+  }
 
   // Table columns
   const columnNames = {
@@ -435,7 +357,7 @@ export const Workspaces: React.FunctionComponent = () => {
       <Title headingLevel="h1">Kubeflow Workspaces</Title>
       <p>View your existing workspaces or create new workspaces.</p>
       {toolbar}
-      <Table aria-label="Sortable table" ouiaId="SortableTable">
+      <Table data-test="workspaces-table" aria-label="Sortable table" ouiaId="SortableTable">
         <Thead>
           <Tr>
             <Th sort={getSortParams(0)}>{columnNames.name}</Th>
@@ -457,13 +379,17 @@ export const Workspaces: React.FunctionComponent = () => {
         </Thead>
         <Tbody>
           {sortedWorkspaces.map((workspace, rowIndex) => (
-            <Tr key={rowIndex}>
-              <Td dataLabel={columnNames.name}>{workspace.name}</Td>
+            <Tr key={rowIndex} data-test={`workspace-row-${rowIndex}`}>
+              <Td dataLabel={columnNames.name} data-test="workspace-name">
+                {workspace.name}
+              </Td>
               <Td dataLabel={columnNames.kind}>{workspace.kind}</Td>
               <Td dataLabel={columnNames.image}>{workspace.options.imageConfig}</Td>
-              <Td dataLabel={columnNames.podConfig}>{workspace.options.podConfig}</Td>
+              <Td dataLabel={columnNames.podConfig} data-test="pod-config">
+                {workspace.options.podConfig}
+              </Td>
               <Td dataLabel={columnNames.state}>
-                <Label color={stateColors[workspace.status.state]}>
+                <Label color={stateColors[workspace.status.state]} data-test="state-label">
                   {WorkspaceState[workspace.status.state]}
                 </Label>
               </Td>
