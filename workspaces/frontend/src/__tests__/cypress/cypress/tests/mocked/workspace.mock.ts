@@ -45,7 +45,7 @@ const generateMockWorkspace = (
       };
     };
   };
-  activity: { last_activity: number; last_update: number };
+  activity: { lastActivity: number; lastUpdate: number };
   services: { httpService: { displayName: string; httpPath: string } }[];
 } => {
   const currentTime = Date.now();
@@ -109,8 +109,8 @@ const generateMockWorkspace = (
       },
     },
     activity: {
-      last_activity: lastActivityTime,
-      last_update: lastUpdateTime,
+      lastActivity: lastActivityTime,
+      lastUpdate: lastUpdateTime,
     },
     services: [
       {
@@ -126,14 +126,14 @@ const generateMockWorkspace = (
 const generateMockWorkspaces = (numWorkspaces: number, byNamespace = false) => {
   const mockWorkspaces = [];
   const podConfigs = [
-    { id: 'small-cpu', display_name: 'Small CPU' },
-    { id: 'medium-cpu', display_name: 'Medium CPU' },
-    { id: 'large-cpu', display_name: 'Large CPU' },
+    { id: 'small-cpu', displayName: 'Small CPU' },
+    { id: 'medium-cpu', displayName: 'Medium CPU' },
+    { id: 'large-cpu', displayName: 'Large CPU' },
   ];
   const imageConfigs = [
-    { id: 'jupyterlab_scipy_180', display_name: 'JupyterLab SciPy 1.8.0' },
-    { id: 'jupyterlab_tensorflow_230', display_name: 'JupyterLab TensorFlow 2.3.0' },
-    { id: 'jupyterlab_pytorch_120', display_name: 'JupyterLab PyTorch 1.2.0' },
+    { id: 'jupyterlab_scipy_180', displayName: 'JupyterLab SciPy 1.8.0' },
+    { id: 'jupyterlab_tensorflow_230', displayName: 'JupyterLab TensorFlow 2.3.0' },
+    { id: 'jupyterlab_pytorch_120', displayName: 'JupyterLab PyTorch 1.2.0' },
   ];
   const namespaces = byNamespace ? ['kubeflow'] : ['kubeflow', 'system', 'user-example', 'default'];
 
@@ -159,9 +159,9 @@ const generateMockWorkspaces = (numWorkspaces: number, byNamespace = false) => {
         state,
         paused,
         imageConfig.id,
-        imageConfig.display_name,
+        imageConfig.displayName,
         podConfig.id,
-        podConfig.display_name,
+        podConfig.displayName,
         pvcName,
       ),
     );
