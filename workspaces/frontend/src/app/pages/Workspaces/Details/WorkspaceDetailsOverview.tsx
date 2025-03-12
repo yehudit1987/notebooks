@@ -23,19 +23,25 @@ export const WorkspaceDetailsOverview: React.FunctionComponent<WorkspaceDetailsO
     <Divider />
     <DescriptionListGroup>
       <DescriptionListTerm>Kind</DescriptionListTerm>
-      <DescriptionListDescription>{workspace.kind}</DescriptionListDescription>
+      <DescriptionListDescription>{workspace.workspaceKind.name}</DescriptionListDescription>
     </DescriptionListGroup>
     <Divider />
     <DescriptionListGroup>
       <DescriptionListTerm>Labels</DescriptionListTerm>
       <DescriptionListDescription>
-        {workspace.podTemplate.podMetadata.labels.join(', ')}
+        {workspace.podTemplate.options.podConfig.current.labels.length > 0
+          ? workspace.podTemplate.options.podConfig.current.labels
+              .map((label) => `${label.key}=${label.value}`)
+              .join(', ')
+          : 'No labels available'}
       </DescriptionListDescription>
     </DescriptionListGroup>
     <Divider />
     <DescriptionListGroup>
       <DescriptionListTerm>Pod config</DescriptionListTerm>
-      <DescriptionListDescription>{workspace.options.podConfig}</DescriptionListDescription>
+      <DescriptionListDescription>
+        {JSON.stringify(workspace.podTemplate.options.podConfig, null, 2)}
+      </DescriptionListDescription>
     </DescriptionListGroup>
     <Divider />
   </DescriptionList>

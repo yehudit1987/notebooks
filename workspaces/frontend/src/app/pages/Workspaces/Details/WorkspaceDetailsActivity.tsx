@@ -16,7 +16,7 @@ type WorkspaceDetailsActivityProps = {
 export const WorkspaceDetailsActivity: React.FunctionComponent<WorkspaceDetailsActivityProps> = ({
   workspace,
 }) => {
-  const { activity, pauseTime, pendingRestart } = workspace.status;
+  const { activity, pausedTime: pauseTime, pendingRestart } = workspace;
 
   return (
     <DescriptionList isHorizontal>

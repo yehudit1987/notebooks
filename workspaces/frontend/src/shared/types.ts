@@ -15,7 +15,7 @@ export interface WorkspaceKind {
   hidden: boolean;
   icon: WorkspaceIcon;
   logo: WorkspaceLogo;
-  pod_template: {
+  podTemplate: {
     podMetadata: {
       labels: {
         myWorkspaceKindLabel: string;
@@ -28,7 +28,7 @@ export interface WorkspaceKind {
       home: string;
     };
     options: {
-      image_config: {
+      imageConfig: {
         default: string;
         values: [
           {
@@ -78,38 +78,35 @@ export enum WorkspaceState {
 export interface Workspace {
   name: string;
   namespace: string;
-  workspace_kind: WorkspaceKind;
-  defer_updates: boolean;
+  workspaceKind: WorkspaceKind;
+  deferUpdates: boolean;
   paused: boolean;
-  paused_time: number;
+  pausedTime: number;
+  pendingRestart: boolean;
   state: WorkspaceState;
-  state_message: string;
-  pod_template: {
-    end_points: {
-      display_name: string;
-      port: string;
-    }[];
-    pod_metadata: {
+  stateMessage: string;
+  podTemplate: {
+    podMetadata: {
       labels: Record<string, string>;
       annotations: Record<string, string>;
     };
     volumes: {
       home: {
-        pvc_name: string;
-        mount_path: string;
+        pvcName: string;
+        mountPath: string;
         readOnly: boolean;
       };
       data: {
-        pvc_name: string;
-        mount_path: string;
+        pvcName: string;
+        mountPath: string;
         readOnly: boolean;
       }[];
     };
     options: {
-      image_config: {
+      imageConfig: {
         current: {
           id: string;
-          display_name: string;
+          displayName: string;
           description: string;
           labels: {
             key: string;
@@ -117,10 +114,10 @@ export interface Workspace {
           }[];
         };
       };
-      pod_config: {
+      podConfig: {
         current: {
           id: string;
-          display_name: string;
+          displayName: string;
           description: string;
           labels: {
             key: string;
@@ -129,22 +126,17 @@ export interface Workspace {
         };
       };
     };
-    image_config: {
-      current: string;
-      desired: string;
-      redirect_chain: string[];
-    };
-    pod_config: {
-      current: string;
-      desired: string;
-      redirect_chain: string[];
-    };
   };
-
   activity: {
-    last_activity: number;
-    last_update: number;
+    lastActivity: number;
+    lastUpdate: number;
   };
+  services: {
+    httpService: {
+      displayName: string;
+      httpPath: string;
+    };
+  }[];
 }
 
 export type WorkspacesColumnNames = {

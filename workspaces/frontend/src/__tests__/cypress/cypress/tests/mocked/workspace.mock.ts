@@ -13,41 +13,40 @@ const generateMockWorkspace = (
 ): {
   name: string;
   namespace: string;
-  workspace_kind: { name: string };
-  defer_updates: boolean;
+  workspaceKind: { name: string };
+  deferUpdates: boolean;
   paused: boolean;
-  paused_time: number;
+  pausedTime: number;
+  pendingRestart: boolean;
   state: WorkspaceState;
-  state_message: string;
-  pod_template: {
-    pod_metadata: { labels: object; annotations: object };
+  stateMessage: string;
+  podTemplate: {
+    podMetadata: { labels: object; annotations: object };
     volumes: {
-      home: { pvc_name: string; mount_path: string; readOnly: boolean };
-      data: { pvc_name: string; mount_path: string; readOnly: boolean }[];
+      home: { pvcName: string; mountPath: string; readOnly: boolean };
+      data: { pvcName: string; mountPath: string; readOnly: boolean }[];
     };
     options: {
-      image_config: {
+      imageConfig: {
         current: {
           id: string;
-          display_name: string;
+          displayName: string;
           description: string;
           labels: { key: string; value: string }[];
         };
       };
-      pod_config: {
+      podConfig: {
         current: {
           id: string;
-          display_name: string;
+          displayName: string;
           description: string;
           labels: ({ key: string; value: string } | { key: string; value: string })[];
         };
       };
     };
-    image_config: { current: string; desired: string; redirect_chain: never[] };
-    pod_config: { current: string; desired: string; redirect_chain: never[] };
-    end_points: { display_name: string; port: string }[];
   };
   activity: { last_activity: number; last_update: number };
+  services: { httpService: { displayName: string; httpPath: string } }[];
 } => {
   const currentTime = Date.now();
   const lastActivityTime = currentTime - Math.floor(Math.random() * 1000000);
@@ -56,55 +55,50 @@ const generateMockWorkspace = (
   return {
     name,
     namespace,
-    workspace_kind: { name: 'jupyterlab' },
-    defer_updates: paused,
+    workspaceKind: { name: 'jupyterlab' },
+    deferUpdates: paused,
     paused,
-    paused_time: paused ? currentTime - Math.floor(Math.random() * 1000000) : 0,
+    pausedTime: paused ? currentTime - Math.floor(Math.random() * 1000000) : 0,
+    pendingRestart: false,
     state,
-    state_message:
+    stateMessage:
       state === WorkspaceState.Running
         ? 'Workspace is running smoothly.'
         : state === WorkspaceState.Paused
           ? 'Workspace is paused.'
           : 'Workspace is operational.',
-    pod_template: {
-      end_points: [
-        {
-          display_name: 'Jupyter-lab',
-          port: '8888',
-        },
-      ],
-      pod_metadata: {
+    podTemplate: {
+      podMetadata: {
         labels: {},
         annotations: {},
       },
       volumes: {
         home: {
-          pvc_name: `${pvcName}-home`,
-          mount_path: '/home/jovyan',
+          pvcName: `${pvcName}-home`,
+          mountPath: '/home/jovyan',
           readOnly: false,
         },
         data: [
           {
-            pvc_name: pvcName,
-            mount_path: '/data/my-data',
+            pvcName,
+            mountPath: '/data/my-data',
             readOnly: paused,
           },
         ],
       },
       options: {
-        image_config: {
+        imageConfig: {
           current: {
             id: imageConfigId,
-            display_name: imageConfigDisplayName,
+            displayName: imageConfigDisplayName,
             description: 'JupyterLab environment',
             labels: [{ key: 'python_version', value: '3.11' }],
           },
         },
-        pod_config: {
+        podConfig: {
           current: {
             id: podConfigId,
-            display_name: podConfigDisplayName,
+            displayName: podConfigDisplayName,
             description: 'Pod configuration with resource limits',
             labels: [
               { key: 'cpu', value: '100m' },
@@ -113,21 +107,19 @@ const generateMockWorkspace = (
           },
         },
       },
-      image_config: {
-        current: imageConfigId,
-        desired: '',
-        redirect_chain: [],
-      },
-      pod_config: {
-        current: podConfigId,
-        desired: podConfigId,
-        redirect_chain: [],
-      },
     },
     activity: {
       last_activity: lastActivityTime,
       last_update: lastUpdateTime,
     },
+    services: [
+      {
+        httpService: {
+          displayName: 'Jupyter-lab',
+          httpPath: `/workspace/${namespace}/${name}/Jupyter-lab/`,
+        },
+      },
+    ],
   };
 };
 

@@ -101,11 +101,12 @@ func NewWorkspaceModelFromWorkspace(ws *kubefloworgv1beta1.Workspace, wsk *kubef
 			Icon:    iconRef,
 			Logo:    logoRef,
 		},
-		DeferUpdates: ptr.Deref(ws.Spec.DeferUpdates, false),
-		Paused:       ptr.Deref(ws.Spec.Paused, false),
-		PausedTime:   ws.Status.PauseTime,
-		State:        wsState,
-		StateMessage: ws.Status.StateMessage,
+		DeferUpdates:   ptr.Deref(ws.Spec.DeferUpdates, false),
+		Paused:         ptr.Deref(ws.Spec.Paused, false),
+		PausedTime:     ws.Status.PauseTime,
+		PendingRestart: ws.Status.PendingRestart,
+		State:          wsState,
+		StateMessage:   ws.Status.StateMessage,
 		PodTemplate: PodTemplate{
 			PodMetadata: PodMetadata{
 				Labels:      podLabels,
@@ -119,7 +120,6 @@ func NewWorkspaceModelFromWorkspace(ws *kubefloworgv1beta1.Workspace, wsk *kubef
 				ImageConfig: imageConfigModel,
 				PodConfig:   podConfigModel,
 			},
-			EndPoints: buildEndpointsList(ws, wsk),
 		},
 		Activity: Activity{
 			LastActivity: ws.Status.Activity.LastActivity,
@@ -131,37 +131,6 @@ func NewWorkspaceModelFromWorkspace(ws *kubefloworgv1beta1.Workspace, wsk *kubef
 		Services: buildServices(ws, imageConfigValue),
 	}
 	return workspaceModel
-}
-
-func buildEndpointsList(ws *kubefloworgv1beta1.Workspace, wsk *kubefloworgv1beta1.WorkspaceKind) []EndPoints {
-	var endpoints []EndPoints
-
-	// Return an empty list if wsk is nil.
-	if wsk == nil {
-		return endpoints
-	}
-
-	// Get the image configuration from the WorkspaceKind's PodTemplate options.
-	imageConfig := wsk.Spec.PodTemplate.Options.ImageConfig
-
-	for _, val := range imageConfig.Values {
-		if len(val.Spec.Ports) == 0 {
-			continue
-		}
-		firstPort := val.Spec.Ports[0]
-		portStr := fmt.Sprintf("%d", firstPort.Port)
-		displayName := firstPort.DisplayName
-		if displayName == "" {
-			displayName = val.Id
-		}
-		ep := EndPoints{
-			DisplayName: displayName,
-			Port:        portStr,
-		}
-		endpoints = append(endpoints, ep)
-	}
-
-	return endpoints
 }
 
 func wskExists(wsk *kubefloworgv1beta1.WorkspaceKind) bool {

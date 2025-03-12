@@ -33,11 +33,11 @@ export const WorkspaceConnectAction: React.FunctionComponent<WorkspaceConnectAct
   };
 
   const onClickConnect = () => {
-    openEndpoint(workspace.pod_template.end_points[0].port);
+    window.open(workspace.services[0].httpService.httpPath, '_blank');
   };
 
-  const openEndpoint = (port: string) => {
-    window.open(`workspace/${workspace.namespace}/${workspace.name}/${port}`, '_blank');
+  const openEndpoint = (value: string) => {
+    window.open(value, '_blank');
   };
 
   return (
@@ -67,9 +67,12 @@ export const WorkspaceConnectAction: React.FunctionComponent<WorkspaceConnectAct
       shouldFocusToggleOnSelect
     >
       <DropdownList>
-        {workspace.pod_template.end_points.map((endpoint) => (
-          <DropdownItem value={endpoint.port} key={`${workspace.name}-${endpoint.port}`}>
-            {endpoint.display_name}
+        {workspace.services.map((service) => (
+          <DropdownItem
+            value={service.httpService.httpPath}
+            key={`${workspace.name}-${service.httpService.displayName}`}
+          >
+            {service.httpService.displayName}
           </DropdownItem>
         ))}
       </DropdownList>

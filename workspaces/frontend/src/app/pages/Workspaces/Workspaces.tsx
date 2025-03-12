@@ -50,8 +50,7 @@ import { WorkspaceStartActionModal } from '~/app/pages/Workspaces/workspaceActio
 import { WorkspaceRestartActionModal } from '~/app/pages/Workspaces/workspaceActions/WorkspaceRestartActionModal';
 import { WorkspaceStopActionModal } from '~/app/pages/Workspaces/workspaceActions/WorkspaceStopActionModal';
 import Filter, { FilteredColumn } from 'shared/components/Filter';
-import { formatRam, formatCPU } from 'shared/utilities/WorkspaceResources';
-import { formatRam } from 'shared/utilities/WorkspaceUtils'; //check if still exist
+import { formatRam, formatCPU } from 'shared/utilities/WorkspaceUtils';
 
 export enum ActionType {
   ViewDetails,
@@ -156,23 +155,23 @@ export const Workspaces: React.FunctionComponent = () => {
           case columnNames.name:
             return workspace.name.search(searchValueInput) >= 0;
           case columnNames.kind:
-            return workspace.workspace_kind.name.search(searchValueInput) >= 0;
+            return workspace.workspaceKind.name.search(searchValueInput) >= 0;
           case columnNames.image:
             return (
-              workspace.pod_template.options.image_config.current.display_name.search(
+              workspace.podTemplate.options.imageConfig.current.displayName.search(
                 searchValueInput,
               ) >= 0
             );
           case columnNames.podConfig:
             return (
-              workspace.pod_template.options.pod_config.current.display_name.search(
+              workspace.podTemplate.options.podConfig.current.displayName.search(
                 searchValueInput,
               ) >= 0
             );
           case columnNames.state:
             return WorkspaceState[workspace.state].search(searchValueInput) >= 0;
           case columnNames.homeVol:
-            return workspace.pod_template.volumes.home.pvc_name.search(searchValueInput) >= 0;
+            return workspace.podTemplate.volumes.home.pvcName.search(searchValueInput) >= 0;
           default:
             return true;
         }
@@ -186,31 +185,20 @@ export const Workspaces: React.FunctionComponent = () => {
   const [activeSortIndex, setActiveSortIndex] = React.useState<number | null>(null);
   const [activeSortDirection, setActiveSortDirection] = React.useState<'asc' | 'desc' | null>(null);
 
-  const getSortableRowValues = (workspace: Workspace): (string | number | undefined)[] => {
+  const getSortableRowValues = (workspace: Workspace): (string | number)[] => {
     const { redirectStatus, name, kind, image, podConfig, state, homeVol, cpu, ram, lastActivity } =
       {
         redirectStatus: '',
         name: workspace.name,
-        kind: workspace.workspace_kind.name,
-        image: workspace.pod_template.options.image_config.current.display_name,
-        podConfig: workspace.pod_template.pod_config.current,
+        kind: workspace.workspaceKind.name,
+        image: workspace.podTemplate.options.imageConfig.current.displayName,
+        podConfig: workspace.podTemplate.options.podConfig.current.displayName,
         state: workspace.state,
-        homeVol: workspace.pod_template.volumes.home.pvc_name,
+        homeVol: workspace.podTemplate.volumes.home.pvcName,
         cpu: getCpuValue(workspace),
         ram: getRamValue(workspace),
-        lastActivity: workspace.activity.last_activity,
+        lastActivity: workspace.activity.lastActivity,
       };
-      redirectStatus: '',
-      name: workspace.name,
-      kind: workspace.workspace_kind.name,
-      image: workspace.pod_template.options.image_config.current.display_name,
-      podConfig: workspace.pod_template.pod_config.current,
-      state: workspace.state,
-      homeVol: workspace.pod_template.volumes.home.pvc_name,
-      cpu: getCpuValue(workspace),
-      ram: getRamValue(workspace),
-      lastActivity: workspace.activity.last_activity,
-    };
     return [redirectStatus, name, kind, image, podConfig, state, homeVol, cpu, ram, lastActivity];
   };
 
@@ -442,11 +430,11 @@ export const Workspaces: React.FunctionComponent = () => {
   );
 
   const getCpuValue = (workspace: Workspace): string =>
-    workspace.pod_template.options.pod_config.current.labels.find((label) => label.key === 'cpu')
+    workspace.podTemplate.options.podConfig.current.labels.find((label) => label.key === 'cpu')
       ?.value || 'N/A';
 
   const getRamValue = (workspace: Workspace): string =>
-    workspace.pod_template.options.pod_config.current.labels.find((label) => label.key === 'memory')
+    workspace.podTemplate.options.podConfig.current.labels.find((label) => label.key === 'memory')
       ?.value || 'N/A';
 
   return (
@@ -511,31 +499,10 @@ export const Workspaces: React.FunctionComponent = () => {
                         }}
                       />
                       <Td dataLabel={columnNames.redirectStatus}>
-                        {workspaceRedirectStatus[workspace.kind]
+                        {workspaceRedirectStatus[workspace.workspaceKind.name]
                           ? getRedirectStatusIcon(
-                              workspaceRedirectStatus[workspace.kind]?.level,
-                              workspaceRedirectStatus[workspace.kind]?.message ||
-                                'No API response available',
-                            )
-                          : getRedirectStatusIcon(undefined, 'No API response available')}
-                      </Td>
-        id: 'view-details',
-        id: 'edit',
-        id: 'delete',
-            id: 'start',
-            id: 'restart',
-        id: 'stop',
-                      <Th
-                        key={`${columnName}-col-name`}
-                        sort={columnName !== 'Redirect Status' ? getSortParams(index) : undefined}
-                      >
-                        {columnName}
-                      </Th>
-                      <Td dataLabel={columnNames.redirectStatus}>
-                        {workspaceRedirectStatus[workspace.workspace_kind.name]
-                          ? getRedirectStatusIcon(
-                              workspaceRedirectStatus[workspace.workspace_kind.name]?.level,
-                              workspaceRedirectStatus[workspace.workspace_kind.name]?.message ||
+                              workspaceRedirectStatus[workspace.workspaceKind.name]?.level,
+                              workspaceRedirectStatus[workspace.workspaceKind.name]?.message ||
                                 'No API response available',
                             )
                           : getRedirectStatusIcon(undefined, 'No API response available')}
@@ -544,37 +511,37 @@ export const Workspaces: React.FunctionComponent = () => {
                         {workspace.name}
                       </Td>
                       <Td dataLabel={columnNames.kind}>
-                        {kindLogoDict[workspace.workspace_kind.name] ? (
-                          <Tooltip content={workspace.workspace_kind.name}>
+                        {kindLogoDict[workspace.workspaceKind.name] ? (
+                          <Tooltip content={workspace.workspaceKind.name}>
                             <Brand
-                              src={kindLogoDict[workspace.workspace_kind.name]}
-                              alt={workspace.workspace_kind.name}
+                              src={kindLogoDict[workspace.workspaceKind.name]}
+                              alt={workspace.workspaceKind.name}
                               style={{ width: '20px', height: '20px', cursor: 'pointer' }}
                             />
                           </Tooltip>
                         ) : (
-                          <Tooltip content={workspace.workspace_kind.name}>
+                          <Tooltip content={workspace.workspaceKind.name}>
                             <CodeIcon />
                           </Tooltip>
                         )}
                       </Td>
                       <Td dataLabel={columnNames.image}>
-                        {workspace.pod_template.options.image_config.current.display_name}
+                        {workspace.podTemplate.options.imageConfig.current.displayName}
                       </Td>
                       <Td data-testid="pod-config" dataLabel={columnNames.podConfig}>
-                        {workspace.pod_template.options.pod_config.current.display_name}
+                        {workspace.podTemplate.options.podConfig.current.displayName}
                       </Td>
                       <Td data-testid="state-label" dataLabel={columnNames.state}>
                         <Label color={stateColors[workspace.state]}>{workspace.state}</Label>{' '}
                       </Td>
                       <Td dataLabel={columnNames.homeVol}>
-                        {workspace.pod_template.volumes.home.pvc_name}
+                        {workspace.podTemplate.volumes.home.pvcName}
                       </Td>
                       <Td dataLabel={columnNames.cpu}>{formatCPU(getCpuValue(workspace))}</Td>
                       <Td dataLabel={columnNames.ram}>{formatRam(getRamValue(workspace))}</Td>
                       <Td dataLabel={columnNames.lastActivity}>
                         <Timestamp
-                          date={new Date(workspace.activity.last_activity)}
+                          date={new Date(workspace.activity.lastActivity)}
                           tooltip={{ variant: TimestampTooltipVariant.default }}
                         >
                           1 hour ago
