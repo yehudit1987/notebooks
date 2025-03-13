@@ -16,7 +16,7 @@ type WorkspaceDetailsActivityProps = {
 export const WorkspaceDetailsActivity: React.FunctionComponent<WorkspaceDetailsActivityProps> = ({
   workspace,
 }) => {
-  const { activity, pausedTime: pauseTime, pendingRestart } = workspace;
+  const { activity, pausedTime, pendingRestart } = workspace;
 
   return (
     <DescriptionList isHorizontal>
@@ -37,7 +37,7 @@ export const WorkspaceDetailsActivity: React.FunctionComponent<WorkspaceDetailsA
       <DescriptionListGroup>
         <DescriptionListTerm>Pause Time</DescriptionListTerm>
         <DescriptionListDescription data-testid="pauseTime">
-          {formatTimestamp(pauseTime)}
+          {formatTimestamp(pausedTime)}
         </DescriptionListDescription>
       </DescriptionListGroup>
       <Divider />

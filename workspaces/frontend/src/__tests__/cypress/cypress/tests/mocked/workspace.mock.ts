@@ -1,3 +1,4 @@
+import type { Workspace, WorkspaceKind } from '~/shared/types';
 import { WorkspaceState } from '~/shared/types';
 
 const generateMockWorkspace = (
@@ -10,44 +11,7 @@ const generateMockWorkspace = (
   podConfigId: string,
   podConfigDisplayName: string,
   pvcName: string,
-): {
-  name: string;
-  namespace: string;
-  workspaceKind: { name: string };
-  deferUpdates: boolean;
-  paused: boolean;
-  pausedTime: number;
-  pendingRestart: boolean;
-  state: WorkspaceState;
-  stateMessage: string;
-  podTemplate: {
-    podMetadata: { labels: object; annotations: object };
-    volumes: {
-      home: { pvcName: string; mountPath: string; readOnly: boolean };
-      data: { pvcName: string; mountPath: string; readOnly: boolean }[];
-    };
-    options: {
-      imageConfig: {
-        current: {
-          id: string;
-          displayName: string;
-          description: string;
-          labels: { key: string; value: string }[];
-        };
-      };
-      podConfig: {
-        current: {
-          id: string;
-          displayName: string;
-          description: string;
-          labels: ({ key: string; value: string } | { key: string; value: string })[];
-        };
-      };
-    };
-  };
-  activity: { lastActivity: number; lastUpdate: number };
-  services: { httpService: { displayName: string; httpPath: string } }[];
-} => {
+): Workspace => {
   const currentTime = Date.now();
   const lastActivityTime = currentTime - Math.floor(Math.random() * 1000000);
   const lastUpdateTime = currentTime - Math.floor(Math.random() * 100000);
@@ -55,7 +19,7 @@ const generateMockWorkspace = (
   return {
     name,
     namespace,
-    workspaceKind: { name: 'jupyterlab' },
+    workspaceKind: { name: 'jupyterlab' } as WorkspaceKind,
     deferUpdates: paused,
     paused,
     pausedTime: paused ? currentTime - Math.floor(Math.random() * 1000000) : 0,
@@ -92,7 +56,7 @@ const generateMockWorkspace = (
             id: imageConfigId,
             displayName: imageConfigDisplayName,
             description: 'JupyterLab environment',
-            labels: [{ key: 'python_version', value: '3.11' }],
+            labels: [{ key: 'python_version', value: 3.11 }],
           },
         },
         podConfig: {

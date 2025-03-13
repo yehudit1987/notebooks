@@ -40,7 +40,7 @@ export const WorkspaceDetailsOverview: React.FunctionComponent<WorkspaceDetailsO
     <DescriptionListGroup>
       <DescriptionListTerm>Pod config</DescriptionListTerm>
       <DescriptionListDescription>
-        {JSON.stringify(workspace.podTemplate.options.podConfig, null, 2)}
+        {workspace.podTemplate.options.podConfig.current.displayName}
       </DescriptionListDescription>
     </DescriptionListGroup>
     <Divider />
