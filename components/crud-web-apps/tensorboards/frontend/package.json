@@ -17,7 +17,7 @@
     "lint": "ng lint --fix",
     "ui-test": "cypress open . --e2e",
     "ui-test-ci": "cypress run . --e2e",
-    "ui-test-ci-all": "cypress run . --e2e --browser=chrome && cypress run . --e2e --browser=firefox"
+    "ui-test-ci-all": "cypress run . --e2e --browser=chrome && cypress run . --e2e --browser=firefox" 
   },
   "private": true,
   "dependencies": {
@@ -64,7 +64,7 @@
     "@types/node": "^12.11.1",
     "@typescript-eslint/eslint-plugin": "4.28.2",
     "@typescript-eslint/parser": "4.28.2",
-    "cypress": "~13.13.1",
+    "cypress": "~14.1.0",
     "eslint": "^7.26.0",
     "eslint-plugin-import": "latest",
     "eslint-plugin-jsdoc": "^34.0.0",

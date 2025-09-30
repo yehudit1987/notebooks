@@ -1,0 +1,256 @@
+name: TWA Frontend Tests
+on:
+  push:
+    branches:
+      - feat/migrate_twa_tests_private  # Temp branch for testing
+  pull_request:
+    paths:
+      - components/crud-web-apps/tensorboards/frontend/**
+      - releasing/version/VERSION
+    branches:
+      - main
+      - v*-branch
+      - notebooks-v1
+
+jobs:
+  frontend-format-linting-check:
+    name: Code format and lint
+    runs-on: ubuntu-22.04
+    defaults:
+      run:
+        working-directory: components/crud-web-apps/tensorboards/frontend
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+          cache: 'npm'
+          cache-dependency-path: 'components/crud-web-apps/tensorboards/frontend/package-lock.json'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Check code format
+        run: npm run format:check
+
+      - name: Lint code
+        run: npm run lint-check
+
+  build-common-lib:
+    name: Build Kubeflow common library
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+          cache: 'npm'
+          cache-dependency-path: 'components/crud-web-apps/common/frontend/kubeflow-common-lib/package-lock.json'
+
+      - name: Install and build common library
+        run: |
+          cd components/crud-web-apps/common/frontend/kubeflow-common-lib
+          npm ci
+          npm run build
+
+      - name: Cache built common library
+        uses: actions/cache@v4
+        with:
+          path: components/crud-web-apps/common/frontend/kubeflow-common-lib/dist
+          key: kubeflow-common-lib-${{ github.sha }}
+          restore-keys: |
+            kubeflow-common-lib-
+
+  frontend-unit-tests:
+    name: Unit tests
+    runs-on: ubuntu-22.04
+    needs: build-common-lib
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+          cache: 'npm'
+          cache-dependency-path: 'components/crud-web-apps/tensorboards/frontend/package-lock.json'
+
+      - name: Restore built common library
+        uses: actions/cache@v4
+        with:
+          path: components/crud-web-apps/common/frontend/kubeflow-common-lib/dist
+          key: kubeflow-common-lib-${{ github.sha }}
+          restore-keys: |
+            kubeflow-common-lib-
+
+      - name: Install common library dependencies
+        run: |
+          cd components/crud-web-apps/common/frontend/kubeflow-common-lib
+          npm ci
+          npm link ./dist/kubeflow
+
+      - name: Install TWA dependencies
+        run: |
+          cd components/crud-web-apps/tensorboards/frontend
+          npm ci
+          npm link kubeflow
+
+      - name: Run unit tests
+        run: |
+          cd components/crud-web-apps/tensorboards/frontend
+          npm run test:prod
+
+  frontend-ui-tests:
+    name: UI tests with Cypress
+    runs-on: ubuntu-22.04
+    needs: build-common-lib
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+          cache: 'npm'
+          cache-dependency-path: 'components/crud-web-apps/tensorboards/frontend/package-lock.json'
+
+      - name: Restore built common library
+        uses: actions/cache@v4
+        with:
+          path: components/crud-web-apps/common/frontend/kubeflow-common-lib/dist
+          key: kubeflow-common-lib-${{ github.sha }}
+          restore-keys: |
+            kubeflow-common-lib-
+
+      - name: Install common library dependencies
+        run: |
+          cd components/crud-web-apps/common/frontend/kubeflow-common-lib
+          npm ci
+          npm link ./dist/kubeflow
+
+      - name: Install TWA dependencies
+        run: |
+          cd components/crud-web-apps/tensorboards/frontend
+          npm ci
+          npm link kubeflow
+
+      - name: Serve UI & run Cypress tests in Chrome and Firefox
+        run: |
+            cd components/crud-web-apps/tensorboards/frontend
+            npm run serve > serve.log 2>&1 & npx wait-on http://localhost:4200
+            npm run ui-test-ci-all
+
+    #   - name: Run Cypress tests
+    #     env:
+    #       # Firefox-specific environment variables for CI
+    #       MOZ_HEADLESS: 1
+    #       DISPLAY: :99
+    #     run: |
+    #       cd components/crud-web-apps/tensorboards/frontend
+    #       # Install xvfb for Firefox headless support
+    #       sudo apt-get update && sudo apt-get install -y xvfb
+    #       export DISPLAY=:99
+    #       Xvfb :99 -screen 0 1024x768x24 > /dev/null 2>&1 &
+    #       sleep 3
+          
+    #       # Test if Firefox can start properly
+    #       echo "🦊 Testing Firefox startup..."
+    #       firefox --version
+          
+    #       # Test Firefox with different flag combinations
+    #       echo "🔧 Testing Firefox startup scenarios..."
+          
+    #       # Test 1: Minimal Firefox
+    #       echo "Test 1: Minimal headless Firefox..."
+    #       timeout 10s firefox --headless &
+    #       FIREFOX_PID_1=$!
+    #       sleep 2
+    #       if kill -0 $FIREFOX_PID_1 2>/dev/null; then
+    #         echo "✅ Minimal Firefox stays alive"
+    #         kill $FIREFOX_PID_1 2>/dev/null
+    #       else
+    #         echo "❌ Even minimal Firefox crashes"
+    #       fi
+          
+    #       # Test 2: Firefox with remote debugging only
+    #       echo "Test 2: Firefox with remote debugging only..."
+    #       timeout 10s firefox --headless --remote-debugging-port=9222 &
+    #       FIREFOX_PID_2=$!
+    #       sleep 2
+    #       if kill -0 $FIREFOX_PID_2 2>/dev/null; then
+    #         echo "✅ Firefox with remote debugging stays alive"
+    #         netstat -tuln | grep :9222 && echo "✅ Port 9222 opened" || echo "❌ Port 9222 still not opened"
+    #         kill $FIREFOX_PID_2 2>/dev/null
+    #       else
+    #         echo "❌ Firefox with remote debugging crashes"
+    #       fi
+          
+    #       # Test 3: Check for crash logs
+    #       echo "Test 3: Looking for Firefox crash information..."
+    #       ls -la ~/.mozilla/firefox/*/crashes/ 2>/dev/null || echo "No crash directory found"
+    #       dmesg | tail -10 | grep -i firefox || echo "No Firefox in dmesg"
+          
+    #       # Test 4: Try Firefox with profile directory
+    #       echo "Test 4: Firefox with explicit profile..."
+    #       mkdir -p /tmp/firefox-profile
+    #       timeout 10s firefox --headless --profile /tmp/firefox-profile --remote-debugging-port=9222 &
+    #       FIREFOX_PID_4=$!
+    #       sleep 3
+    #       if kill -0 $FIREFOX_PID_4 2>/dev/null; then
+    #         echo "✅ Firefox with profile works"
+    #         netstat -tuln | grep :9222 && echo "✅ Port 9222 opened" || echo "❌ Port 9222 still not found"
+    #         kill $FIREFOX_PID_4 2>/dev/null
+    #       else
+    #         echo "❌ Firefox with profile also crashes"
+    #       fi
+          
+    #       # Test 5: Check if port is bound to different interface
+    #       echo "Test 5: Checking all network interfaces for debug ports..."
+    #       timeout 10s firefox --headless --remote-debugging-port=9222 --remote-allow-hosts=127.0.0.1,localhost &
+    #       FIREFOX_PID_5=$!
+    #       sleep 3
+    #       echo "All listening ports:"
+    #       netstat -tuln | grep -E ":9222|:2828" || echo "No debug ports on any interface"
+    #       echo "All Firefox network connections:"
+    #       netstat -tupln | grep firefox || echo "No Firefox network activity"
+    #       kill $FIREFOX_PID_5 2>/dev/null || true
+          
+    #       # Test 6: Try installing missing graphics libraries
+    #       echo "Test 6: Installing missing graphics libraries..."
+    #       sudo apt-get install -y libegl1-mesa || echo "Failed to install libEGL"
+          
+    #       # Test 7: Try Firefox with additional debugging flags
+    #       echo "Test 7: Firefox with all debugging flags..."
+    #       timeout 10s firefox --headless \
+    #         --remote-debugging-port=9222 \
+    #         --remote-allow-hosts=127.0.0.1 \
+    #         --remote-allow-origins=http://127.0.0.1:4200,http://localhost:4200 \
+    #         --disable-gpu \
+    #         --no-sandbox \
+    #         --disable-dev-shm-usage &
+    #       FIREFOX_PID_7=$!
+    #       sleep 3
+    #       echo "Checking for debug port after installing libEGL and additional flags:"
+    #       netstat -tuln | grep :9222 && echo "✅ Port 9222 NOW WORKS!" || echo "❌ Still no port 9222"
+    #       curl -s http://127.0.0.1:9222/json/version && echo "✅ Debug endpoint works!" || echo "❌ Debug endpoint still fails"
+    #       kill $FIREFOX_PID_7 2>/dev/null || true
+          
+    #       # Install libEGL first (we know this helps)
+    #       echo "📦 Installing libEGL for Firefox debugging..."
+    #       sudo apt-get install -y libegl1-mesa
+          
+    #       npm run serve > serve.log 2>&1 & npx wait-on http://localhost:4200
+          
+    #       # Run tests with detailed Firefox debugging
+    #       echo "🚀 Running Cypress tests with Firefox debugging..."
+    #       echo "🔍 Testing if we can prevent Cypress from overriding Firefox config..."
+    #       npx cypress run . --e2e --browser=firefox --config video=false
