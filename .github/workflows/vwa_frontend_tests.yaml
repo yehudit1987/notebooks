@@ -1,5 +1,8 @@
 name: VWA Frontend Tests
 on:
+  push:
+    branches:
+      - hen_migrate_vwa 
   pull_request:
     paths:
       - components/crud-web-apps/volumes/frontend/**
@@ -101,6 +104,12 @@ jobs:
         with:
           node-version: 16
 
+      - name: Install Kubeflow common library dependecies   # Missing step
+        run: |
+          cd components/crud-web-apps/common/frontend/kubeflow-common-lib
+          npm ci
+          npm run build
+          npm link ./dist/kubeflow
       - name: Install VWA dependencies
         run: |
           cd components/crud-web-apps/volumes/frontend
