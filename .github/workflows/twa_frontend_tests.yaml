@@ -1,5 +1,8 @@
 name: TWA Frontend Tests
 on:
+  push:
+    branches:
+      - twa_private_tests
   pull_request:
     paths:
       - components/crud-web-apps/tensorboards/frontend/**
