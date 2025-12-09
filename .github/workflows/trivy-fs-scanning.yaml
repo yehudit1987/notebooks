@@ -13,7 +13,7 @@ on:
         options:
           - notebooks-v1
           - notebooks-v2
-          - tensorboard_vulnerabilities_3
+          - tensorboard_vulnerabilities_4
 
 permissions:
   actions: read
@@ -26,7 +26,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        branch: ${{ github.event_name == 'workflow_dispatch' && fromJSON(format('["{0}"]', github.event.inputs.branch)) || fromJSON('["notebooks-v1", "notebooks-v2", "tensorboard_vulnerabilities_3"]') }}
+        branch: ${{ github.event_name == 'workflow_dispatch' && fromJSON(format('["{0}"]', github.event.inputs.branch)) || fromJSON('["notebooks-v1", "notebooks-v2", "tensorboard_vulnerabilities_4"]') }}
     steps:
     - name: Checkout code
       id: checkout
